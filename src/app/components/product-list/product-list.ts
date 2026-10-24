@@ -1,10 +1,6 @@
-import { Component, computed, signal } from '@angular/core';
-
-interface Product {
-  id: number;
-  name: string;
-  price: number;
-}
+import { Component, computed, inject, signal } from '@angular/core';
+import { ProductService } from '../../services/product';
+import { Product } from '../../models/product';
 
 @Component({
   selector: 'app-product-list',
@@ -13,11 +9,9 @@ interface Product {
   styleUrl: './product-list.css',
 })
 export class ProductList {
-  protected readonly products = signal<Product[]>([
-    { id: 1, name: 'Laptop', price: 900 },
-    { id: 2, name: 'Phone', price: 500 },
-    { id: 3, name: 'Headphones', price: 80 },
-  ]);
+  private readonly productService = inject(ProductService);
+
+  protected readonly products = this.productService.products;
 
   protected readonly searchTerm = signal('');
   protected readonly sortOrder = signal('default');
@@ -39,20 +33,14 @@ export class ProductList {
       return;
     }
 
-    const newProduct: Product = {
-      id: Math.max(0, ...this.products().map((product) => product.id)) + 1,
-      name,
-      price,
-    };
-
-    this.products.update((products) => [...products, newProduct]);
+    this.productService.addProduct(name, price);
 
     this.newProductName.set('');
     this.newProductPrice.set(null);
   }
 
   protected deleteProduct(id: number) {
-    this.products.update((products) => products.filter((product) => product.id !== id));
+    this.productService.deleteProduct(id);
   }
 
   protected startEdit(product: Product) {
@@ -72,13 +60,11 @@ export class ProductList {
     const name = this.editProductName().trim();
     const price = this.editProductPrice();
 
-    if (id === null || !name || price === null || !this.Number.isFinite(price) || price <= 0) {
+    if (id === null || !name || price === null || !Number.isFinite(price) || price <= 0) {
       return;
     }
 
-    this.products.update((products) =>
-      products.map((product) => (product.id === id ? { ...product, name, price } : product)),
-    );
+    this.productService.updateProduct(id, name, price);
 
     this.cancelEdit();
   }

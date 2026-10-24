@@ -1,12 +1,11 @@
-import { Component, signal } from '@angular/core';
-import { RouterOutlet } from '@angular/router';
+import { Component, computed, inject, signal } from '@angular/core';
 import { count, single } from 'rxjs';
 import { DecimalPipe } from '@angular/common';
 import { ProductList } from './components/product-list/product-list';
-
+import { ProductService } from './services/product';
 
 @Component({
-  imports: [RouterOutlet, DecimalPipe,ProductList],
+  imports: [DecimalPipe, ProductList],
   selector: 'app-root',
   styleUrl: './app.css',
   templateUrl: './app.html',
@@ -15,7 +14,10 @@ export class App {
   protected readonly title = signal('ShopAdmin Dashboard');
   protected readonly totalSales = signal(24580);
   protected readonly totalOrders = signal(156);
-  protected readonly totalProducts = signal(48);
+
+  private readonly productService = inject(ProductService);
+  readonly totalProducts = computed(() => this.productService.products().length);
+
   protected readonly isStoreOpen = signal(true);
 
   protected addOrder() {
